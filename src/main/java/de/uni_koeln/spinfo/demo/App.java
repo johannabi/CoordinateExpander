@@ -11,7 +11,12 @@ import is2.tag.Tagger;
 import is2.tools.Tool;
 
 public class App {
-
+	
+	/**
+	 * Contains demo application to show how the coordinate exapander
+	 * is working
+	 * @param args
+	 */
 	public static void main(String[] args) {
 		
 		List<String> coordinates = new ArrayList<String>();
