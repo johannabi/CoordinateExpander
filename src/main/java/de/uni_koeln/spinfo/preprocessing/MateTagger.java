@@ -6,7 +6,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import de.uni_koeln.spinfo.data.Token;
+import de.uni_koeln.spinfo.data.NewToken;
 import is2.data.SentenceData09;
 import opennlp.tools.tokenize.Tokenizer;
 import opennlp.tools.tokenize.TokenizerME;
@@ -22,14 +22,14 @@ public class MateTagger {
 	 * @param extractionUnits
 	 * @throws IOException
 	 */
-	public static List<List<Token>> setLexicalData(List<String> sentencesToTag, is2.tools.Tool lemmatizer,
+	public static List<List<NewToken>> setLexicalData(List<String> sentencesToTag, is2.tools.Tool lemmatizer,
 			is2.tools.Tool morphTagger, is2.tools.Tool tagger) throws IOException {
 		if (tokenizeModel == null)
 			initialize();
 		//IETokenizer tokenizer = new IETokenizer();
 		boolean lexicalDataIsStoredInDB;
 		SentenceData09 sd = null;
-		List<List<Token>> toReturn = new ArrayList<List<Token>>();
+		List<List<NewToken>> toReturn = new ArrayList<List<NewToken>>();
 		for (String sentence : sentencesToTag) {
 
 			lexicalDataIsStoredInDB = true;
@@ -60,9 +60,9 @@ public class MateTagger {
 //				}
 
 			}
-			List<Token> senTokens = new ArrayList<Token>();
+			List<NewToken> senTokens = new ArrayList<NewToken>();
 			for (int i = 0; i < sd.forms.length; i++) {
-				senTokens.add(new Token(sd.forms[i], sd.plemmas[i], sd.ppos[i]));
+				senTokens.add(new NewToken(sd.forms[i], sd.plemmas[i], sd.ppos[i]));
 			}
 			toReturn.add(senTokens);
 			
@@ -70,7 +70,7 @@ public class MateTagger {
 		return toReturn;
 	}
 
-	public static List<Token> setLexicalData(String sentence, is2.tools.Tool lemmatizer, is2.tools.Tool morphTagger,
+	public static List<NewToken> setLexicalData(String sentence, is2.tools.Tool lemmatizer, is2.tools.Tool morphTagger,
 			is2.tools.Tool tagger) {
 		if (tokenizeModel == null)
 				initialize();
@@ -93,9 +93,9 @@ public class MateTagger {
 //		eu.setLemmata(sd.plemmas);
 //		eu.setPosTags(sd.ppos);	
 		
-		List<Token> toReturn = new ArrayList<Token>();
+		List<NewToken> toReturn = new ArrayList<NewToken>();
 		for (int i = 0; i < sd.forms.length; i++) {
-			toReturn.add(new Token(sd.forms[i], sd.plemmas[i], sd.ppos[i]));
+			toReturn.add(new NewToken(sd.forms[i], sd.plemmas[i], sd.ppos[i]));
 		}
 		
 		return toReturn;

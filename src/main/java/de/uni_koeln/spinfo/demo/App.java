@@ -3,7 +3,7 @@ package de.uni_koeln.spinfo.demo;
 import java.util.ArrayList;
 import java.util.List;
 
-import de.uni_koeln.spinfo.data.Token;
+import de.uni_koeln.spinfo.data.NewToken;
 import de.uni_koeln.spinfo.preprocessing.MateTagger;
 import de.uni_koeln.spinfo.workflow.CoordinateExpander;
 import is2.lemmatizer.Lemmatizer;
@@ -21,8 +21,8 @@ public class App {
 		
 		List<String> coordinates = new ArrayList<String>();
 		coordinates.add("Bau- und Landmaschinen");
-		coordinates.add("Deutsch-, Französisch- und Englischkenntnisse");
-		coordinates.add("gute Deutsch-, Französisch- und sehr gute Englischkenntnisse");
+		coordinates.add("Deutsch-, Franzï¿½sisch- und Englischkenntnisse");
+		coordinates.add("gute Deutsch-, Franzï¿½sisch- und sehr gute Englischkenntnisse");
 		
 		CoordinateExpander ce = new CoordinateExpander();
 		Tool lemmatizer = new Lemmatizer(
@@ -33,10 +33,10 @@ public class App {
 		
 		for(String s : coordinates) {
 			
-			List<Token> senTokens = MateTagger.setLexicalData(s, lemmatizer, null, tagger);
+			List<NewToken> senTokens = MateTagger.setLexicalData(s, lemmatizer, null, tagger);
 			
-			List<List<Token>> result = ce.resolve(senTokens, lemmatizer);
-			for(List<Token> r : result) {
+			List<List<NewToken>> result = ce.resolve(senTokens, lemmatizer);
+			for(List<NewToken> r : result) {
 				System.out.println(r);
 			}
 			System.out.println("--------------");
