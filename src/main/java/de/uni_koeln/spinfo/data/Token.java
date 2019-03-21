@@ -1,20 +1,22 @@
 package de.uni_koeln.spinfo.data;
 
-//TODO Klassenname?
-public class NewToken {
+public class Token {
 
 	protected String token, lemma, posTag;
 	
 	protected boolean ieToken, modifierToken;
 	
-	public NewToken(String token, String lemma, String posTag) {
+	public Token(String token, String lemma, String posTag) {
 		this.token = token;
 		this.lemma = lemma;
 		this.posTag = posTag;
 	}
 
-	public NewToken(String string, String lemma2, String posTag2, boolean isInformationEntity) {
-		// TODO Auto-generated constructor stub
+	public Token(String token, String lemma, String posTag, boolean isInformationEntity) {
+		this.token = token;
+		this.lemma = lemma;
+		this.posTag = posTag;
+		this.ieToken = isInformationEntity;
 	}
 
 	public String getToken() {

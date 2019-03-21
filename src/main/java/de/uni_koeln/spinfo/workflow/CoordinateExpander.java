@@ -2,7 +2,7 @@ package de.uni_koeln.spinfo.workflow;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
+import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -18,27 +18,36 @@ import org.slf4j.LoggerFactory;
 
 import de.danielnaber.jwordsplitter.AbstractWordSplitter;
 import de.danielnaber.jwordsplitter.GermanWordSplitter;
-import de.uni_koeln.spinfo.data.NewToken;
+import de.uni_koeln.spinfo.data.Token;
 import de.uni_koeln.spinfo.util.Util;
 import is2.data.SentenceData09;
 import is2.tools.Tool;
-import opennlp.tools.tokenize.TokenSample;
 
 public class CoordinateExpander {
 
 	private AbstractWordSplitter splitter;
 
 	// key = stamm, value = suffix
-	private Map<String, String> possResolvations;
+	private Map<String, String> possResolvations = null;
 
-	//TODO Pfade f�rs BIBB anpassen
-	private String resolvedFileString = "compounds/resolvedCompounds.txt";// "C://sqlite/coordinations/resolvedCompounds.txt";//																									
-	private String possibleFileString = "compounds/possibleCompounds.txt";// C://sqlite/coordinations/possibleCompounds.txt";
+	// TODO Pfade fürs BIBB anpassen
+	//zerlegte Komposita befinden sich in den Projekt-Ressourcen
+	private String splittedCompoundsFileSrcPath = "compounds/splittedCompounds.txt";// "C://sqlite/coordinations/resolvedCompounds.txt";//
 	
-	private static Logger log = LoggerFactory.getLogger(CoordinateExpander.class);
+	//Datei mit neuen Kompositazerlegungen muss gesetzt werden
+	private File possibleFile = null;// C://sqlite/coordinations/possibleCompounds.txt";
 
-	public CoordinateExpander() {
+	// TODO neue Koordinationen einfließen lassen
+	
+	private Logger log = LoggerFactory.getLogger(getClass());
 
+	public CoordinateExpander(File possCoordinates) {
+		this.possibleFile = possCoordinates;
+		initialize();
+		
+	}
+	
+	private void initialize() {
 		possResolvations = new HashMap<String, String>();
 		try {
 			this.splitter = new GermanWordSplitter(true); // true = interfix-Zeichen werden beibehalten
@@ -47,7 +56,7 @@ public class CoordinateExpander {
 			for (Map.Entry<String, List<String>> e : rCompounds.entrySet()) {
 				splitter.addException(e.getKey(), e.getValue());
 			}
-			// f�gt die neu evaluierten Komposita der txt-Datei mit den feststehenden
+			// fügt die neu evaluierten Komposita der txt-Datei mit den feststehenden
 			// Komposita hinzu
 			writeResolvedCoordinations(rCompounds);
 		} catch (IOException e) {
@@ -69,9 +78,11 @@ public class CoordinateExpander {
 
 		Map<String, List<String>> toReturn = new HashMap<String, List<String>>();
 		// liest bereits bekannte Komposita ein
-		toReturn.putAll(readFromFile(resolvedFileString));
+		ClassLoader classLoader = getClass().getClassLoader();
+		File f = new File(classLoader.getResource(splittedCompoundsFileSrcPath).getFile());
+		toReturn.putAll(readFromFile(f));
 		// liest evaluierte Komposita ein
-		toReturn.putAll(readFromFile(possibleFileString));
+		toReturn.putAll(readFromFile(possibleFile));
 
 		return toReturn;
 	}
@@ -87,7 +98,10 @@ public class CoordinateExpander {
 		}
 
 		try {
-			File f = new File(resolvedFileString);
+			ClassLoader classLoader = getClass().getClassLoader();
+			//File f = new File(classLoader.getResource(splittedCompoundsFileSrcPath).getFile());
+			File f = new File("src/main/resources/" + splittedCompoundsFileSrcPath);
+			//log.info(f.getAbsolutePath());
 			if (!f.exists()) {
 				f.getParentFile().mkdirs();
 				f.createNewFile();
@@ -100,11 +114,11 @@ public class CoordinateExpander {
 		}
 	}
 
-	private Map<String, List<String>> readFromFile(String fileName) throws IOException {
-
+	private Map<String, List<String>> readFromFile(File file) throws IOException {
+		//log.info(file.getAbsolutePath());
 		Map<String, List<String>> toReturn = new HashMap<String, List<String>>();
-		InputStream is = getClass().getClassLoader().getResourceAsStream(fileName);
-		
+		InputStream is = new FileInputStream(file);
+
 		BufferedReader in = new BufferedReader(new InputStreamReader(is));
 		String line;
 		while ((line = in.readLine()) != null) {
@@ -113,52 +127,37 @@ public class CoordinateExpander {
 				toReturn.put(parts[0] + parts[1], Arrays.asList(parts));
 		}
 		in.close();
-
 		return toReturn;
 
 	}
 
-	public void writeNewCoordinations() {
-		System.out.print(": " + possResolvations.size() + " to " + possibleFileString);
-		StringBuffer sb = new StringBuffer();
-		for (Map.Entry<String, String> e : possResolvations.entrySet()) {
-			sb.append(e.getKey() + "|" + e.getValue() + "\n");
-		}
-
-		try {
-			File f = new File(possibleFileString);
-			if (!f.exists()) {
-				f.getParentFile().mkdirs();
-				f.createNewFile();
-			}
-			FileWriter fw = new FileWriter(f);
-			fw.write(sb.toString());
-			fw.close();
-		} catch (IOException e1) {
-			e1.printStackTrace();
-		}
-	}
-
-	public List<List<NewToken>> resolve(List<NewToken> completeEntity, Tool lemmatizer) {
+	/**
+	 * löst alle Koordinationen im Ausdruck auf und gibt für jede Auflösung eine
+	 * Liste von Tokens zurück. Merkmal einer Koordination ist hier eine Konjunktion
+	 * (POS-tag KON)
+	 * @param completeEntity Token-List, die Koordination enthält
+	 * @param lemmatizer zur anschließenden Lemmatisierung der entstandenen Ausdrücke
+	 * @return
+	 */
+	public List<List<Token>> resolve(List<Token> completeEntity, Tool lemmatizer) {
 		return resolve(completeEntity, completeEntity, lemmatizer, false);
 	}
 
 	/**
-	 * l�st alle Koordinationen im Ausdruck auf und gibt f�r jede Aufl�sung eine
-	 * Liste von Tokens zur�ck. Merkmal einer Koordination ist hier eine Konjunktion
+	 * löst alle Koordinationen im Ausdruck auf und gibt für jede Auflösung eine
+	 * Liste von Tokens zurück. Merkmal einer Koordination ist hier eine Konjunktion
 	 * (POS-tag KON)
 	 * 
 	 * @param completeEntity
 	 * @param extractionUnit
 	 * @param lemmatizer
 	 * @param debug
-	 * @return 
+	 * @return
 	 * @return list of lemmas for every resolved coordination
 	 */
-	public List<List<NewToken>> resolve(List<NewToken> completeEntity, List<NewToken> extractionUnit, Tool lemmatizer,
+	public List<List<Token>> resolve(List<Token> completeEntity, List<Token> extractionUnit, Tool lemmatizer,
 			boolean debug) {
-		log.info("CompleteEntity: " + completeEntity);
-		log.info("Extraction Unit: " + extractionUnit);
+
 		String[] tokens = new String[completeEntity.size()];
 		String[] pos = new String[completeEntity.size()];
 		String[] lemma = new String[completeEntity.size()];
@@ -173,21 +172,23 @@ public class CoordinateExpander {
 		if (Arrays.asList(pos).contains("TRUNC")) { // Rechtsellipse Morphemkoordination
 			return resolveTruncEllipsis(tokens, pos, lemma, extractionUnit, lemmatizer, debug);
 		} else { // TODO Linksellipse, andere Koordinationen
-			
+
 			int konIndex = Arrays.asList(pos).indexOf("KON");
-			if(tokens[konIndex+1].startsWith("-")) {
+
+			if (tokens[konIndex + 1].startsWith("-")) {
 				return resolveLeftEllipsis(tokens, pos, lemma, extractionUnit, lemmatizer, debug);
 			}
-			List<List<NewToken>> list = new ArrayList<List<NewToken>>();
+
+			List<List<Token>> list = new ArrayList<List<Token>>();
 			return list;
-			
+
 		}
 	}
 
-	private List<List<NewToken>> resolveLeftEllipsis(String[] tokens, String[] pos, String[] lemmata,
-			List<NewToken> extractionUnit, Tool lemmatizer, boolean debug) {
+	private List<List<Token>> resolveLeftEllipsis(String[] tokens, String[] pos, String[] lemmata,
+			List<Token> extractionUnit, Tool lemmatizer, boolean debug) {
 		List<String[]> toReturn = new ArrayList<String[]>();
-		List<List<NewToken>> resolvedTT = new ArrayList<List<NewToken>>();
+		List<List<Token>> resolvedTT = new ArrayList<List<Token>>();
 
 		int endKoo = tokens.length - 1;
 		while (!tokens[endKoo].startsWith("-"))
@@ -198,7 +199,7 @@ public class CoordinateExpander {
 			if (!tokens[startKoo].startsWith("-") && pos[startKoo].equals(konjunctPOS))
 				break;
 			startKoo--;
-			
+
 		}
 
 		// Tokens, die vor der Koordination stehen
@@ -226,10 +227,10 @@ public class CoordinateExpander {
 		// Aufl�sung in restlichen Satz zur�ckf�hren
 		for (String c : coordinations) {
 			List<String> combined = new ArrayList<String>();
-			List<NewToken> combinedTT = new ArrayList<NewToken>();
-			if(!before.contains("<root>"))
+			List<Token> combinedTT = new ArrayList<Token>();
+			if (!before.contains("<root>"))
 				combined.add("<root>");
-			
+
 			combined.addAll(before);
 
 			combined.add(c.replaceAll("^A-Za-zäÄüÜöÖß-]", ""));
@@ -238,13 +239,13 @@ public class CoordinateExpander {
 			String[] combiArray = new String[combined.size()];
 			combined.toArray(combiArray);
 
-			// Aufgel�sten Satz lemmatisieren
+			// Aufgelösten Satz lemmatisieren
 			String[] lemmataResolved = getLemmata(combiArray, lemmatizer);
 
 			String[] result = new String[lemmataResolved.length - 1];
 			for (int i = 1; i < lemmataResolved.length; i++) {
 				result[i - 1] = lemmataResolved[i];
-				combinedTT.add(new NewToken(combiArray[i], lemmataResolved[i], null)); //TODO POS
+				combinedTT.add(new Token(combiArray[i], lemmataResolved[i], null)); // TODO POS
 			}
 			toReturn.add(result);
 			resolvedTT.add(combinedTT);
@@ -288,8 +289,8 @@ public class CoordinateExpander {
 
 			String ellipse = konjuncts.get(i);
 			if (!compound.equals("")) {
-				//falls ellipse gro� geschrieben beginnt, wird Bindestrich beibehalten
-				if(Character.isLowerCase(ellipse.charAt(1)))
+				// falls ellipse gro� geschrieben beginnt, wird Bindestrich beibehalten
+				if (Character.isLowerCase(ellipse.charAt(1)))
 					ellipse = ellipse.replaceAll("-", "");
 			}
 			konjuncts.set(i, compound + ellipse);
@@ -297,11 +298,11 @@ public class CoordinateExpander {
 		return konjuncts;
 	}
 
-	private List<List<NewToken>> resolveTruncEllipsis(String[] tokens, String[] pos, String[] lemmata,
-			List<NewToken> extractionUnit, Tool lemmatizer, boolean debug) {
+	private List<List<Token>> resolveTruncEllipsis(String[] tokens, String[] pos, String[] lemmata,
+			List<Token> extractionUnit, Tool lemmatizer, boolean debug) {
 
-		//List<String[]> toReturn = new ArrayList<String[]>();
-		List<List<NewToken>> resolvedTT = new ArrayList<List<NewToken>>();
+		// List<String[]> toReturn = new ArrayList<String[]>();
+		List<List<Token>> resolvedTT = new ArrayList<List<Token>>();
 		int startKoo = Arrays.asList(pos).indexOf("TRUNC");
 		// pr�fen, ob es sich um die Koordination von NN oder ADJA handelt
 		boolean startsWithCapLetter = Character.isUpperCase(tokens[startKoo].charAt(0));
@@ -325,13 +326,13 @@ public class CoordinateExpander {
 		int endKoo = Arrays.asList(pos).subList(startKoo, pos.length).indexOf(konjunctPOS);
 
 		if (endKoo < 0) { // falls Koordination abgeschnitten ist
-			List<NewToken> missingPart = completeCoordination(extractionUnit, tokens, startKoo, konjunctPOS);
+			List<Token> missingPart = completeCoordination(extractionUnit, tokens, startKoo, konjunctPOS);
 
 			List<String> tokenList = new ArrayList<String>(Arrays.asList(tokens));
 			List<String> posList = new ArrayList<String>(Arrays.asList(pos));
 			List<String> lemmaList = new ArrayList<String>(Arrays.asList(lemmata));
 
-			for (NewToken tt : missingPart) {
+			for (Token tt : missingPart) {
 				tokenList.add(tt.getToken());
 				posList.add(tt.getPosTag());
 				lemmaList.add(tt.getLemma());
@@ -348,6 +349,8 @@ public class CoordinateExpander {
 
 		} else
 			endKoo = endKoo + startKoo; // wegen subList-Index
+
+		
 
 		// Tokens, die vor der Koordination stehen
 		List<String> before = new ArrayList<String>();
@@ -393,24 +396,28 @@ public class CoordinateExpander {
 			}
 		}
 
-		// Koordinationen aufl�sen
+		// Koordinationen auflösen
 		List<String[]> coordinations = combineRCoordinations(konjuncts);
 
-		// Aufl�sung in restlichen Satz zur�ckf�hren
+		// Auflösung in restlichen Satz zurückführen
 		for (String[] c : coordinations) {
-			List<NewToken> combinedTT = new ArrayList<NewToken>();
+			List<Token> combinedTT = new ArrayList<Token>();
 			List<String> combined = new ArrayList<String>();
 			combined.add("<root>");
 			combined.addAll(before);
-			if (!c[0].isEmpty())
-				combined.add(c[0].replaceAll("[^A-Za-zäÄüÜöÖß-]", ""));
+			if (!c[0].isEmpty()) {
+				String adja = c[0].replaceAll("[^A-Za-zäÄüÜöÖß\\s-]", "");
+				combined.add(adja.trim());
+			}
+				
 			combined.add(c[1].replaceAll("[^A-Za-zäÄüÜöÖß-]", ""));
 			combined.addAll(after);
 
 			String[] combiArray = new String[combined.size()];
 			combined.toArray(combiArray);
 
-			// Aufgel�sten Satz lemmatisieren
+			// Aufgelösten Satz lemmatisieren
+			// log.info(combined.toString());
 			String[] lemmataResolved = getLemmata(combiArray, lemmatizer);
 
 			if (lemmataResolved.length == 2) { // falls IE nur aus einem lemma (+root) besteht
@@ -423,16 +430,13 @@ public class CoordinateExpander {
 					lemmataResolved[before.size() + 1] = correctLemma(l, rightLemma);
 				}
 			}
-			
 
 			String[] result = new String[lemmataResolved.length - 1];
 			for (int i = 1; i < lemmataResolved.length; i++) {
-				NewToken tt = new NewToken(combiArray[i], lemmataResolved[i], null); //TODO POS
-				System.out.println(combiArray[i]);
+				Token tt = new Token(combiArray[i], lemmataResolved[i], null); // TODO POS
 				result[i - 1] = lemmataResolved[i];
 				combinedTT.add(tt);
 			}
-			//toReturn.add(result);
 			resolvedTT.add(combinedTT);
 		}
 		return resolvedTT;
@@ -450,7 +454,7 @@ public class CoordinateExpander {
 		char[] wrongC = wrongLemma.toCharArray();
 		char[] rightC = rightLemma.toCharArray();
 
-		// �bereinstimmenden Substring finden
+		// übereinstimmenden Substring finden
 		// Suffix von rightLemma ist auf jeden Fall richtig
 		// wrongLemma ist zu kurz oder zu lang
 		int i = wrongLemma.lastIndexOf(rightLemma.charAt(rightLemma.length() - 1));
@@ -470,12 +474,20 @@ public class CoordinateExpander {
 		return wrongLemma;
 	}
 
-	private List<NewToken> completeCoordination(List<NewToken> extractionUnit, String[] tokens, int startKoo,
+	/**
+	 * identifiziert die abgeschnittenen Tokens anhand ihrer POS-Tags
+	 * @param extractionUnit
+	 * @param tokens
+	 * @param startKoo
+	 * @param konjunctPOS
+	 * @return
+	 */
+	private List<Token> completeCoordination(List<Token> extractionUnit, String[] tokens, int startKoo,
 			String konjunctPOS) {
 
-		List<NewToken> toReturn = new ArrayList<NewToken>();
+		List<Token> toReturn = new ArrayList<Token>();
 		for (int i = 0; i < extractionUnit.size(); i++) {
-			NewToken tt = extractionUnit.get(i);
+			Token tt = extractionUnit.get(i);
 
 			if (tt.getToken().equals(tokens[tokens.length - 1])) { // sobald der Satz am Beginn der IE ist
 				int j = i + 1;
@@ -488,6 +500,7 @@ public class CoordinateExpander {
 				break;
 			}
 		}
+
 		return toReturn;
 	}
 
@@ -520,12 +533,12 @@ public class CoordinateExpander {
 					compound = lastKonjunct.replaceAll(firstMorphem + "-", "");
 					possResolvations.put(firstMorphem, compound);
 				}
-			} else {
+			} else { //TODO eigene Kompositazerlegung
 				possResolvations.put(subtokens.get(0), "");
 				compound = subtokens.get(0);
 			}
 
-		} else if (subtokens.size() == 2) { // falls genau zwei Morpheme gefunden wurden, wird das letztere gew�hlt
+		} else if (subtokens.size() == 2) { // falls genau zwei Morpheme gefunden wurden, wird das letztere gewählt
 			compound = subtokens.get(1);
 		} else { // splitter hat mehr als zwei Morpheme gefunden
 			compound = subtokens.get(subtokens.size() - 1);
@@ -536,12 +549,12 @@ public class CoordinateExpander {
 
 			String ellipse = konjuncts.get(i)[1];
 
-			// F�lle, bei denen der Erg�nzungsstrich als Bindestrich bleiben muss (PC-
+			// Fälle, bei denen der Ergänzungsstrich als Bindestrich bleiben muss (PC-
 			// // MS-Office- // ...)
 			boolean ellipseIsUppercase = Util.isAllUpperCase(ellipse);
 			if (!compound.equals("")) {
 				if (ellipseIsUppercase) {
-					// Bindestrich beibehalten, Compound gro�schreiben
+					// Bindestrich beibehalten, Compound großschreiben
 					compound = Character.toUpperCase(compound.charAt(0)) + compound.substring(1);
 				} else {
 					ellipse = ellipse.replaceAll("-", "");
@@ -551,16 +564,17 @@ public class CoordinateExpander {
 		}
 		return konjuncts;
 	}
-	
+
 	private static String[] getLemmata(String[] tokens, is2.tools.Tool lemmatizer) {
 		SentenceData09 sd = new SentenceData09();
 		sd.init(tokens);
-		
-		if (lemmatizer != null) 
+
+		if (lemmatizer != null)
 			lemmatizer.apply(sd);
-		
-		
+
 		return sd.plemmas;
 	}
+
 	
+
 }
