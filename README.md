@@ -8,4 +8,4 @@ job advertisements. A documentation (in german) about the developement and theor
 
 ## How to use it
 This repo contains an eclipse project that can be used in as source in another eclipse project. Just to see how it
-can be implemented you can look at the [demo application](../src/main/resources/de/uni_koeln/spinfo/demo/App.java). 
+can be implemented you can look at the [demo application](../master/src/main/java/de/uni_koeln/spinfo/demo/App.java). 
