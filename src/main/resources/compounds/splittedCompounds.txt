@@ -17,8 +17,8 @@ Service|orientierung
 Pneumatik|bereich
 Real|schulabschluss
 Mess|technik
-Kranken|pflegefachkraft
 In|landsreisen
+Kranken|pflegefachkraft
 Englisch|kenntnisse
 Landschafts|bau
 Automatisierungs|technik

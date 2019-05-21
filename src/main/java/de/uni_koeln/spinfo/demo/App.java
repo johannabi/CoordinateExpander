@@ -6,6 +6,7 @@ import java.util.List;
 
 import de.uni_koeln.spinfo.data.Token;
 import de.uni_koeln.spinfo.preprocessing.MateTagger;
+import de.uni_koeln.spinfo.util.Util;
 import de.uni_koeln.spinfo.workflow.CoordinateExpander;
 import is2.lemmatizer.Lemmatizer;
 import is2.tag.Tagger;
@@ -13,7 +14,7 @@ import is2.tools.Tool;
 
 public class App {
 	
-	private static String newCoordinatesFile = "src/main/resources/compounds/possibleCompounds.txt";
+	private static File newCoordinatesFile = new File("src/main/resources/compounds/possibleCompounds.txt");
 	
 	/**
 	 * Contains demo application to show how the coordinate exapander
@@ -23,11 +24,11 @@ public class App {
 	public static void main(String[] args) {
 		
 		List<String> coordinates = new ArrayList<String>();
-		coordinates.add("Die Bedienung von Bau- und Landmaschinen steht im Vordergrund");
+		coordinates.add("Alten- und Krankenpflegefachkraft");
 		coordinates.add("Deutsch-, Französisch- und Englischkenntnisse");
 		coordinates.add("Gute Deutsch-, Französisch- sowie sehr gute Englischkenntnisse sind von Vorteil.");
 		
-		CoordinateExpander ce = new CoordinateExpander(new File(newCoordinatesFile));
+		CoordinateExpander ce = new CoordinateExpander(newCoordinatesFile);
 		Tool lemmatizer = new Lemmatizer(
 				"src/main/resources/nlp/sentencedata_models/ger-tagger+lemmatizer+morphology+graph-based-3.6/lemma-ger-3.6.model",
 				false);
@@ -44,6 +45,8 @@ public class App {
 			}
 			System.out.println("--------------");
 		}
+		
+		Util.writeNewCoordinations(ce.getPossResolvations(), newCoordinatesFile);
 
 	}
 

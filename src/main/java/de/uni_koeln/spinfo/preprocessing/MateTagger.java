@@ -4,6 +4,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import de.uni_koeln.spinfo.data.Token;
@@ -105,6 +106,8 @@ public class MateTagger {
 	public static String[] getLemmata(String[] tokens, is2.tools.Tool lemmatizer) {
 		SentenceData09 sd = new SentenceData09();
 		sd.init(tokens);
+//		System.out.println(Arrays.asList(tokens));
+//		System.out.println(sd);
 		
 		if (lemmatizer != null) 
 			lemmatizer.apply(sd);
