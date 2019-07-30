@@ -157,7 +157,6 @@ public class CoordinateExpander {
 	 */
 	public List<List<Token>> resolve(List<Token> completeEntity, List<Token> extractionUnit, Tool lemmatizer,
 			boolean debug) {
-
 		String[] tokens = new String[completeEntity.size()];
 		String[] pos = new String[completeEntity.size()];
 		String[] lemma = new String[completeEntity.size()];
@@ -300,11 +299,10 @@ public class CoordinateExpander {
 
 	private List<List<Token>> resolveTruncEllipsis(String[] tokens, String[] pos, String[] lemmata,
 			List<Token> extractionUnit, Tool lemmatizer, boolean debug) {
-
 		// List<String[]> toReturn = new ArrayList<String[]>();
 		List<List<Token>> resolvedTT = new ArrayList<List<Token>>();
 		int startKoo = Arrays.asList(pos).indexOf("TRUNC");
-		// pr�fen, ob es sich um die Koordination von NN oder ADJA handelt
+		// prüfen, ob es sich um die Koordination von NN oder ADJA handelt
 		boolean startsWithCapLetter = Character.isUpperCase(tokens[startKoo].charAt(0));
 		String konjunctPOS = "";
 		if (startsWithCapLetter) {
@@ -324,7 +322,6 @@ public class CoordinateExpander {
 
 		// Ende der Koordination bestimmen
 		int endKoo = Arrays.asList(pos).subList(startKoo, pos.length).indexOf(konjunctPOS);
-
 		if (endKoo < 0) { // falls Koordination abgeschnitten ist
 			List<Token> missingPart = completeCoordination(extractionUnit, tokens, startKoo, konjunctPOS);
 
@@ -424,7 +421,7 @@ public class CoordinateExpander {
 
 				String rightLemma = lemmata[endKoo].replaceAll("[^A-Za-zäÄüÜöÖß-]", "");
 
-				// pr�fen, ob zusammengesetztes Token richtig lemmatisiert wurde
+				// prüfen, ob zusammengesetztes Token richtig lemmatisiert wurde
 				String l = lemmataResolved[before.size() + 1];
 				if (!(l.charAt(l.length() - 1) == rightLemma.charAt(rightLemma.length() - 1))) {
 					lemmataResolved[before.size() + 1] = correctLemma(l, rightLemma);
@@ -450,7 +447,6 @@ public class CoordinateExpander {
 	 * @return korrigiertes (urspr. falsches) Lemma
 	 */
 	private String correctLemma(String wrongLemma, String rightLemma) {
-
 		char[] wrongC = wrongLemma.toCharArray();
 		char[] rightC = rightLemma.toCharArray();
 
@@ -462,9 +458,15 @@ public class CoordinateExpander {
 		String suffix = "";
 		if (i < 0) { // suffix des richtigen Lemma ist nicht im falschen Lemma -> wrongLemma zu kurz
 			i = rightC.length - 1;
-			while (rightC[i] != wrongC[wrongC.length - 1]) {
-				suffix = rightC[i] + suffix;
-				i--;
+			try {
+				while (rightC[i] != wrongC[wrongC.length - 1]) {
+					suffix = rightC[i] + suffix;
+					i--;
+				}
+			} catch (ArrayIndexOutOfBoundsException e) {
+				return wrongLemma;
+				// TODO JB: Exception entfernen
+				// passiert, wenn POS nicht richtig ausgezeichnet wurde
 			}
 			wrongLemma = wrongLemma + suffix;
 		} else { // wrongLemma zu lang
@@ -492,7 +494,12 @@ public class CoordinateExpander {
 			if (tt.getToken().equals(tokens[tokens.length - 1])) { // sobald der Satz am Beginn der IE ist
 				int j = i + 1;
 				do {
-					tt = extractionUnit.get(j);
+					try {
+						tt = extractionUnit.get(j);
+					} catch (IndexOutOfBoundsException e) {
+						return toReturn;
+					}
+					
 
 					toReturn.add(tt);
 					j++;
