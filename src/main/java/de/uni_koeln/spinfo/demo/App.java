@@ -4,6 +4,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.log4j.Logger;
+
 import de.uni_koeln.spinfo.data.Token;
 import de.uni_koeln.spinfo.preprocessing.MateTagger;
 import de.uni_koeln.spinfo.util.Util;
@@ -15,6 +17,8 @@ import is2.tools.Tool;
 public class App {
 	
 	private static File newCoordinatesFile = new File("src/main/resources/compounds/possibleCompounds.txt");
+	
+	private static Logger log = Logger.getLogger(App.class);
 	
 	/**
 	 * Contains demo application to show how the coordinate exapander
@@ -41,9 +45,9 @@ public class App {
 			
 			List<List<Token>> result = ce.resolve(senTokens, lemmatizer);
 			for(List<Token> r : result) {
-				System.out.println(r);
+				log.info(r.toString());
 			}
-			System.out.println("--------------");
+			log.info("--------------");
 		}
 		
 		Util.writeNewCoordinations(ce.getPossResolvations(), newCoordinatesFile);

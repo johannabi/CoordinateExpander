@@ -13,14 +13,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.log4j.Logger;
 
 import de.danielnaber.jwordsplitter.AbstractWordSplitter;
 import de.danielnaber.jwordsplitter.GermanWordSplitter;
 import de.uni_koeln.spinfo.data.Token;
+import de.uni_koeln.spinfo.preprocessing.MateTagger;
 import de.uni_koeln.spinfo.util.Util;
-import is2.data.SentenceData09;
 import is2.tools.Tool;
 
 public class CoordinateExpander {
@@ -39,7 +38,7 @@ public class CoordinateExpander {
 
 	// TODO neue Koordinationen einfließen lassen
 	
-	private Logger log = LoggerFactory.getLogger(getClass());
+	private Logger log = Logger.getLogger(CoordinateExpander.class);
 
 	public CoordinateExpander(File possCoordinates) {
 		this.possibleFile = possCoordinates;
@@ -98,8 +97,7 @@ public class CoordinateExpander {
 		}
 
 		try {
-			ClassLoader classLoader = getClass().getClassLoader();
-			//File f = new File(classLoader.getResource(splittedCompoundsFileSrcPath).getFile());
+			
 			File f = new File("src/main/resources/" + splittedCompoundsFileSrcPath);
 			//log.info(f.getAbsolutePath());
 			if (!f.exists()) {
@@ -167,7 +165,7 @@ public class CoordinateExpander {
 			lemma[i] = completeEntity.get(i).getLemma();
 		}
 		if (debug)
-			System.out.println("Entity Tokens: " + Arrays.asList(tokens));
+			log.info("Entity Tokens: " + Arrays.asList(tokens));
 		if (Arrays.asList(pos).contains("TRUNC")) { // Rechtsellipse Morphemkoordination
 			return resolveTruncEllipsis(tokens, pos, lemma, extractionUnit, lemmatizer, debug);
 		} else { // TODO Linksellipse, andere Koordinationen
@@ -239,7 +237,7 @@ public class CoordinateExpander {
 			combined.toArray(combiArray);
 
 			// Aufgelösten Satz lemmatisieren
-			String[] lemmataResolved = getLemmata(combiArray, lemmatizer);
+			String[] lemmataResolved = MateTagger.getLemmata(combiArray, lemmatizer);
 
 			String[] result = new String[lemmataResolved.length - 1];
 			for (int i = 1; i < lemmataResolved.length; i++) {
@@ -415,7 +413,7 @@ public class CoordinateExpander {
 
 			// Aufgelösten Satz lemmatisieren
 			// log.info(combined.toString());
-			String[] lemmataResolved = getLemmata(combiArray, lemmatizer);
+			String[] lemmataResolved = MateTagger.getLemmata(combiArray, lemmatizer);
 
 			if (lemmataResolved.length == 2) { // falls IE nur aus einem lemma (+root) besteht
 
@@ -572,15 +570,7 @@ public class CoordinateExpander {
 		return konjuncts;
 	}
 
-	private static String[] getLemmata(String[] tokens, is2.tools.Tool lemmatizer) {
-		SentenceData09 sd = new SentenceData09();
-		sd.init(tokens);
-
-		if (lemmatizer != null)
-			lemmatizer.apply(sd);
-
-		return sd.plemmas;
-	}
+	
 
 	
 
