@@ -1,10 +1,21 @@
 package de.uni_koeln.spinfo.data;
 
-public class Token {
+import java.io.Serializable;
+
+public class Token implements Serializable{
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 
 	protected String token, lemma, posTag;
 	
 	protected boolean ieToken, modifierToken;
+	
+	public Token() {
+		//default JPA Construtor
+	}
 	
 	public Token(String token, String lemma, String posTag) {
 		this.token = token;
