@@ -31,21 +31,38 @@ public class CoordinateExpander {
 
 	// TODO Pfade fürs BIBB anpassen
 	//zerlegte Komposita befinden sich in den Projekt-Ressourcen
-	private String splittedCompoundsFileSrcPath = "compounds/splittedCompounds.txt";// "C://sqlite/coordinations/resolvedCompounds.txt";//
+//	private String splittedCompoundsFileSrcPath = "compounds/splittedCompounds.txt";// "C://sqlite/coordinations/resolvedCompounds.txt";//
+	
+	private File splittedCompoundsFile = null;
 	
 	//Datei mit neuen Kompositazerlegungen muss gesetzt werden
-	private File possibleFile = null;// C://sqlite/coordinations/possibleCompounds.txt";
+	private File possibleCompoundsFile = null;// C://sqlite/coordinations/possibleCompounds.txt";
 
 	// TODO neue Koordinationen einfließen lassen
 	
 	private Logger log = Logger.getLogger(CoordinateExpander.class);
 
-	public CoordinateExpander(File possCoordinates) {
-		this.possibleFile = possCoordinates;
-		initialize();
-		
-	}
+	/**
+	 * uses internal dictionary of splitted compounds
+	 * @param possCoordinates
+	 */
+//	public CoordinateExpander(File possCoordinates) {
+//		
+//		ClassLoader classLoader = getClass().getClassLoader();
+//		String splittedCompoundsFileSrcPath = "compounds/splittedCompounds.txt";
+//		String splittedCompoundsPath = classLoader.getResource(splittedCompoundsFileSrcPath).getFile();
+//		this.splittedCompoundsFile = new File(splittedCompoundsPath);
+//		
+//		this.possibleCompoundsFile = possCoordinates;
+//		initialize();		
+//	}
 	
+	public CoordinateExpander(File possCoordinates, File splittedCoordinates) {
+		this.possibleCompoundsFile = possCoordinates;
+		this.splittedCompoundsFile = splittedCoordinates;
+		initialize();
+	}
+
 	private void initialize() {
 		possResolvations = new HashMap<String, String>();
 		try {
@@ -77,11 +94,11 @@ public class CoordinateExpander {
 
 		Map<String, List<String>> toReturn = new HashMap<String, List<String>>();
 		// liest bereits bekannte Komposita ein
-		ClassLoader classLoader = getClass().getClassLoader();
-		File f = new File(classLoader.getResource(splittedCompoundsFileSrcPath).getFile());
-		toReturn.putAll(readFromFile(f));
+		
+		log.info("Read Compounds: " + splittedCompoundsFile.getAbsolutePath());
+		toReturn.putAll(readFromFile(splittedCompoundsFile));
 		// liest evaluierte Komposita ein
-		toReturn.putAll(readFromFile(possibleFile));
+		toReturn.putAll(readFromFile(possibleCompoundsFile));
 
 		return toReturn;
 	}
@@ -97,14 +114,12 @@ public class CoordinateExpander {
 		}
 
 		try {
-			
-			File f = new File("src/main/resources/" + splittedCompoundsFileSrcPath);
-			//log.info(f.getAbsolutePath());
-			if (!f.exists()) {
-				f.getParentFile().mkdirs();
-				f.createNewFile();
+
+			if (!this.splittedCompoundsFile.exists()) {
+				this.splittedCompoundsFile.getParentFile().mkdirs();
+				this.splittedCompoundsFile.createNewFile();
 			}
-			FileWriter fw = new FileWriter(f);
+			FileWriter fw = new FileWriter(this.splittedCompoundsFile);
 			fw.write(sb.toString());
 			fw.close();
 		} catch (IOException e1) {
@@ -113,11 +128,10 @@ public class CoordinateExpander {
 	}
 
 	private Map<String, List<String>> readFromFile(File file) throws IOException {
-		//log.info(file.getAbsolutePath());
 		Map<String, List<String>> toReturn = new HashMap<String, List<String>>();
 		InputStream is = new FileInputStream(file);
-
 		BufferedReader in = new BufferedReader(new InputStreamReader(is));
+		
 		String line;
 		while ((line = in.readLine()) != null) {
 			String[] parts = line.split("\\|");
@@ -523,7 +537,7 @@ public class CoordinateExpander {
 
 		// zerteilung in morpheme
 		List<String> subtokens = splitter.splitWord(lastKonjunct);
-		String compound = ""; // Morphem(komposita), das an jede Ellipse geh�ngt werden soll
+		String compound = ""; // Morphem(komposita), das an jede Ellipse gehängt werden soll
 
 		if (subtokens.size() == 1) { // falls Wordsplitter keine Trennung gefunden hat
 			// Methoden, um selbst eine Trennung zu finden

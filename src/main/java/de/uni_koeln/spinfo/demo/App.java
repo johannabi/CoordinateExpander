@@ -3,6 +3,7 @@ package de.uni_koeln.spinfo.demo;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.log4j.Logger;
 
@@ -16,7 +17,12 @@ import is2.tools.Tool;
 
 public class App {
 	
-	private static File newCoordinatesFile = new File("src/main/resources/compounds/possibleCompounds.txt");
+	private static File possibleCompoundsFile = new File("src/main/resources/compounds/possibleCompounds.txt");
+	private static File splittedCompoundsFile = new File("src/main/resources/compounds/splittedCompounds.txt");
+	
+	private static String lemmatizerPath = "src/main/resources/nlp/sentencedata_models/ger-tagger+lemmatizer+morphology+graph-based-3.6/lemma-ger-3.6.model";
+	private static String posTaggerPath = "src/main/resources/nlp/sentencedata_models/ger-tagger+lemmatizer+morphology+graph-based-3.6/tag-ger-3.6.model";
+	
 	
 	private static Logger log = Logger.getLogger(App.class);
 	
@@ -29,15 +35,13 @@ public class App {
 		
 		List<String> coordinates = new ArrayList<String>();
 		coordinates.add("Alten- und Krankenpflegefachkraft");
+		coordinates.add("Eine hohe Motivation- und Einsatzbereitschaft");
 		coordinates.add("Deutsch-, Französisch- und Englischkenntnisse");
 		coordinates.add("Gute Deutsch-, Französisch- sowie sehr gute Englischkenntnisse sind von Vorteil.");
 		
-		CoordinateExpander ce = new CoordinateExpander(newCoordinatesFile);
-		Tool lemmatizer = new Lemmatizer(
-				"src/main/resources/nlp/sentencedata_models/ger-tagger+lemmatizer+morphology+graph-based-3.6/lemma-ger-3.6.model",
-				false);
-		Tool tagger = new Tagger(
-				"src/main/resources/nlp/sentencedata_models/ger-tagger+lemmatizer+morphology+graph-based-3.6/tag-ger-3.6.model");
+		CoordinateExpander ce = new CoordinateExpander(possibleCompoundsFile, splittedCompoundsFile);
+		Tool lemmatizer = new Lemmatizer(lemmatizerPath, false);
+		Tool tagger = new Tagger(posTaggerPath);
 		
 		for(String s : coordinates) {
 			
@@ -50,7 +54,12 @@ public class App {
 			log.info("--------------");
 		}
 		
-		Util.writeNewCoordinations(ce.getPossResolvations(), newCoordinatesFile);
+		log.info("Neue Komposita:");
+		for (Map.Entry<String, String> e : ce.getPossResolvations().entrySet()) {
+			log.info(e);
+		}
+		
+		Util.writeNewCoordinations(ce.getPossResolvations(), possibleCompoundsFile);
 
 	}
 
