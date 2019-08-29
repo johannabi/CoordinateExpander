@@ -1,4 +1,4 @@
-package de.uni_koeln.spinfo.demo;
+package cooex.demo;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -7,10 +7,10 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 
-import de.uni_koeln.spinfo.data.Token;
-import de.uni_koeln.spinfo.preprocessing.MateTagger;
-import de.uni_koeln.spinfo.util.Util;
-import de.uni_koeln.spinfo.workflow.CoordinateExpander;
+import cooex.data.Token;
+import cooex.preprocessing.MateTagger;
+import cooex.util.Util;
+import cooex.workflow.CoordinateExpander;
 import is2.lemmatizer.Lemmatizer;
 import is2.tag.Tagger;
 import is2.tools.Tool;

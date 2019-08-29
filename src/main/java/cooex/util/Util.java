@@ -1,4 +1,4 @@
-package de.uni_koeln.spinfo.util;
+package cooex.util;
 
 import java.io.File;
 import java.io.FileWriter;
