@@ -1,4 +1,4 @@
-package cooex.data;
+package de.uni_koeln.spinfo.data;
 
 import java.io.Serializable;
 

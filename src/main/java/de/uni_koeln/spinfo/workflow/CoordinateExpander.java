@@ -1,4 +1,4 @@
-package cooex.workflow;
+package de.uni_koeln.spinfo.workflow;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -15,11 +15,11 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 
-import cooex.data.Token;
-import cooex.preprocessing.MateTagger;
-import cooex.util.Util;
 import de.danielnaber.jwordsplitter.AbstractWordSplitter;
 import de.danielnaber.jwordsplitter.GermanWordSplitter;
+import de.uni_koeln.spinfo.data.Token;
+import de.uni_koeln.spinfo.preprocessing.MateTagger;
+import de.uni_koeln.spinfo.util.Util;
 import is2.tools.Tool;
 
 public class CoordinateExpander {

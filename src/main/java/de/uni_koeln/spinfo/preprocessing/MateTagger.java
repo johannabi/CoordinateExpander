@@ -1,4 +1,4 @@
-package cooex.preprocessing;
+package de.uni_koeln.spinfo.preprocessing;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -6,7 +6,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import cooex.data.Token;
+import de.uni_koeln.spinfo.data.Token;
 import is2.data.SentenceData09;
 import is2.tools.Tool;
 import opennlp.tools.tokenize.Tokenizer;
