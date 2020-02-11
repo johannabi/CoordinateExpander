@@ -13,7 +13,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import de.danielnaber.jwordsplitter.AbstractWordSplitter;
 import de.danielnaber.jwordsplitter.GermanWordSplitter;
@@ -40,7 +41,7 @@ public class CoordinateExpander {
 
 	// TODO neue Koordinationen einfließen lassen
 	
-	private Logger log = Logger.getLogger(CoordinateExpander.class);
+	private Logger log = LogManager.getLogger();//Logger.getLogger(CoordinateExpander.class);
 
 	/**
 	 * uses internal dictionary of splitted compounds
