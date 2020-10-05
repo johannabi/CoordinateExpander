@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import de.uni_koeln.spinfo.application.Launcher;
 import de.uni_koeln.spinfo.data.Token;
 import is2.data.SentenceData09;
 import is2.tools.Tool;
@@ -21,7 +22,8 @@ public class MateTagger {
 	private static void initialize() {
 		InputStream modelIn = null;
 		try {
-			modelIn = new FileInputStream("src/main/resources/nlp/openNLPmodels/de-token.bin");
+//			modelIn = MateTagger.class.getClassLoader().getResourceAsStream("nlp/openNLPmodels/de-token.bin");
+			modelIn = new FileInputStream(Launcher.folder + "/nlp/openNLPmodels/de-token.bin");
 			tokenizeModel = new TokenizerModel(modelIn);
 		} catch (IOException e) {
 			e.printStackTrace();

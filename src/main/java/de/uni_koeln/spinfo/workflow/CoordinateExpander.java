@@ -408,6 +408,7 @@ public class CoordinateExpander {
 
 		// Koordinationen auflösen
 		List<String[]> coordinations = combineRCoordinations(konjuncts);
+		
 
 		// Auflösung in restlichen Satz zurückführen
 		for (String[] c : coordinations) {
@@ -447,8 +448,15 @@ public class CoordinateExpander {
 				result[i - 1] = lemmataResolved[i];
 				combinedTT.add(tt);
 			}
+//			if (debug)
+//				System.out.println(combinedTT.toString());
+//			combinedTT.remove(0); // remove <root>-Token
+			if (debug)
+				System.out.println(combinedTT.toString());
 			resolvedTT.add(combinedTT);
 		}
+
+		
 		return resolvedTT;
 	}
 
