@@ -11,7 +11,7 @@
 	<version>1.0.1</version>
 	
 	<properties>
-		<log4j.version>2.17.0</log4j.version>
+		<log4j.version>2.17.1</log4j.version>
 		<jwordsplitter.version>4.4</jwordsplitter.version>
 		<opennlp.version>1.8.4</opennlp.version>
 		<anna.version>3.5</anna.version>
